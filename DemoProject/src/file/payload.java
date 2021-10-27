@@ -48,6 +48,8 @@ public class payload {
 				+ "}";
 	}
 	public static String addBook(String isbn, String aisle) {
+		
+		//Static Update
 		return ("{\r\n" +
 
 						"\r\n" +
