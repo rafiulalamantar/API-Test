@@ -38,6 +38,12 @@ public class JiraTest {
 		.when().post("/rest/api/2/issue/{id}/attachments")
 		.then().log().all().assertThat().statusCode(200);
 		
+		//Get issue
+		
+		given().filter(session).pathParam("id","10100").queryParam("fields", "comment")
+		.log().all().when().get("/rest/api/2/issue/{id}")
+		.then().log().all().extract().response().asString();
+		
 	}
 
 }
