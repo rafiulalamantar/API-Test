@@ -5,6 +5,8 @@ import io.restassured.filter.session.SessionFilter;
 
 import static io.restassured.RestAssured.*;
 
+import java.io.File;
+
 public class JiraTest {
 
 	public static void main(String[] args) {
@@ -20,14 +22,22 @@ public class JiraTest {
 		
 		given().pathParam("id","10100").log().all().header("Content-Type","application/json")
 		.body("{\r\n"
-				+ "    \"body\": \" This From Eclipse for comment automation\",\r\n"
+				+ "    \"body\": \" This From Eclipse for add text file\",\r\n"
 				+ "    \"visibility\": {\r\n"
 				+ "        \"type\": \"role\",\r\n"
 				+ "        \"value\": \"Administrators\"\r\n"
 				+ "    }\r\n"
 				+ "}").filter(session).when().post("/rest/api/2/issue/{id}/comment")
 		.then().log().all().statusCode(201);
-
+		
+		//add attachment
+		
+		given().header("X-Atlassian-Token", "no-check").filter(session).pathParam("id","10100")
+		.header("multipart","multiPart/form-data")
+		.multiPart("file", new File("jira.txt"))
+		.when().post("/rest/api/2/issue/{id}/attachments")
+		.then().log().all().assertThat().statusCode(200);
+		
 	}
 
 }
