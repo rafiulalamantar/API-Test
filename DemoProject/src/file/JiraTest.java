@@ -2,10 +2,13 @@ package file;
 
 import io.restassured.RestAssured;
 import io.restassured.filter.session.SessionFilter;
+import io.restassured.path.json.JsonPath;
 
 import static io.restassured.RestAssured.*;
 
 import java.io.File;
+
+import org.testng.Assert;
 
 public class JiraTest {
 
@@ -14,21 +17,27 @@ public class JiraTest {
 		RestAssured.baseURI="http://localhost:8080";
 		SessionFilter session = new SessionFilter();
 		
+		//Login
 		String response =given().header("Content-Type","application/json")
 		.body("{ \"username\": \"rafiulantar\", \"password\": \"01731776465\" }").
-		log().all().filter(session).when().post("/rest/auth/1/session").
-		then().log().all().extract().response().asString();
+		filter(session).when().post("/rest/auth/1/session").
+		then().extract().response().asString();
 		
-		
-		given().pathParam("id","10100").log().all().header("Content-Type","application/json")
+		//add comment
+		String expectedMessage="hi This is for dynamic test";
+		String addCommnetResponse =given().pathParam("id","10100").header("Content-Type","application/json")
 		.body("{\r\n"
-				+ "    \"body\": \" This From Eclipse for add text file\",\r\n"
+				+ "    \"body\": \" "+expectedMessage+"\",\r\n"
 				+ "    \"visibility\": {\r\n"
 				+ "        \"type\": \"role\",\r\n"
 				+ "        \"value\": \"Administrators\"\r\n"
 				+ "    }\r\n"
 				+ "}").filter(session).when().post("/rest/api/2/issue/{id}/comment")
-		.then().log().all().statusCode(201);
+		.then().statusCode(201).extract().response().asString();
+		
+		JsonPath js = new JsonPath(addCommnetResponse);
+		String commentID=js.getString("id");
+		System.out.println(commentID);
 		
 		//add attachment
 		
@@ -36,13 +45,26 @@ public class JiraTest {
 		.header("multipart","multiPart/form-data")
 		.multiPart("file", new File("jira.txt"))
 		.when().post("/rest/api/2/issue/{id}/attachments")
-		.then().log().all().assertThat().statusCode(200);
+		.then().assertThat().statusCode(200);
 		
 		//Get issue
 		
-		given().filter(session).pathParam("id","10100").queryParam("fields", "comment")
-		.log().all().when().get("/rest/api/2/issue/{id}")
-		.then().log().all().extract().response().asString();
+		String issueDetails=given().filter(session).pathParam("id","10100").queryParam("fields", "comment")
+		.when().get("/rest/api/2/issue/{id}")
+		.then().extract().response().asString();
+		
+		JsonPath js1 = new JsonPath(issueDetails);
+		int commentsCount=js1.get("fields.comment.comments.size()");
+		for(int i=0; i<commentsCount;i++) {
+			String commnetIssueID=js1.get("fields.comment.comments["+i+"].id").toString();
+			System.out.println(commnetIssueID);
+			if(commnetIssueID.equalsIgnoreCase(commentID)) {
+				
+				String message=js1.get("fields.comment.comments["+i+"].body").toString();
+				System.out.println(message);
+				Assert.assertEquals(message, expectedMessage);
+			}
+		}
 		
 	}
 
