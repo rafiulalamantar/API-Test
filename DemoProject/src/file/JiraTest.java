@@ -24,7 +24,7 @@ public class JiraTest {
 		then().extract().response().asString();
 		
 		//add comment
-		String expectedMessage="hi This is for dynamic test";
+		String expectedMessage="String";
 		String addCommnetResponse =given().pathParam("id","10100").header("Content-Type","application/json")
 		.body("{\r\n"
 				+ "    \"body\": \" "+expectedMessage+"\",\r\n"
@@ -33,7 +33,7 @@ public class JiraTest {
 				+ "        \"value\": \"Administrators\"\r\n"
 				+ "    }\r\n"
 				+ "}").filter(session).when().post("/rest/api/2/issue/{id}/comment")
-		.then().statusCode(201).extract().response().asString();
+		.then().statusCode(201).extract().response().asString().toString();
 		
 		JsonPath js = new JsonPath(addCommnetResponse);
 		String commentID=js.getString("id");
@@ -51,17 +51,19 @@ public class JiraTest {
 		
 		String issueDetails=given().filter(session).pathParam("id","10100").queryParam("fields", "comment")
 		.when().get("/rest/api/2/issue/{id}")
-		.then().extract().response().asString();
+		.then().extract().response().asString().toString();
 		
 		JsonPath js1 = new JsonPath(issueDetails);
-		int commentsCount=js1.get("fields.comment.comments.size()");
+		int commentsCount=js1.getInt("fields.comment.comments.size()");
 		for(int i=0; i<commentsCount;i++) {
 			String commnetIssueID=js1.get("fields.comment.comments["+i+"].id").toString();
 			System.out.println(commnetIssueID);
 			if(commnetIssueID.equalsIgnoreCase(commentID)) {
 				
 				String message=js1.get("fields.comment.comments["+i+"].body").toString();
-				System.out.println(message);
+				//System.out.println(message);
+				//Assert.assertEquals(expectedMessage,message);
+				//System.out.println(expectedMessage);
 				Assert.assertEquals(message, expectedMessage);
 			}
 		}
