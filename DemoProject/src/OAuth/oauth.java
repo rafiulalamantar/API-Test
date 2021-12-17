@@ -23,7 +23,9 @@ public class oauth {
 		driver.findElement(By.cssSelector("input['type=password']")).sendKeys(Keys.ENTER);
 		Thread.sleep(4000);
 		String currentUrl=driver.getCurrentUrl();
-		System.out.println(currentUrl);
+		//System.out.println(currentUrl);
+		String partialCode=currentUrl.split("code=")[1];
+		
 		
 		
 		String accessTokenResponse=given() .queryParams("code","")
