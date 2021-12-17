@@ -25,6 +25,7 @@ public class oauth {
 		String currentUrl=driver.getCurrentUrl();
 		//System.out.println(currentUrl);
 		String partialCode=currentUrl.split("code=")[1];
+		String code=partialCode.split("&scope")[0];
 		
 		
 		
